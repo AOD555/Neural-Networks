@@ -1,0 +1,144 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn import preprocessing
+from tensorflow import keras
+from tensorflow.keras import layers
+from keras.utils import np_utils
+import pandas as pd
+import os
+from sklearn.neighbors import KNeighborsClassifier
+import numpy as np
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
+from sklearn.metrics import accuracy_score
+from sklearn.naive_bayes import GaussianNB
+import random
+import math
+#from scipy import stats
+from sklearn.metrics import accuracy_score
+# from sklearn.neighbors import KNeighborsRegressor
+# from sklearn.metrics import explained_variance_score
+# from sklearn import preprocessing
+# from numpy import nan
+# from sklearn import tree
+# from sklearn import preprocessing
+# from sklearn import utils
+from sklearn import tree
+#import graphviz
+print(tf.__version__)
+
+
+#################################### data 3 reading of data files#################################################
+names =["buying","maint","doors","persons","lug_boot","safety","ClassValues"]
+
+data3 = pd.read_csv("car.data", header=None, skipinitialspace=True,
+                    names=names, na_values=["?"]) # Reads the file in my directory
+
+
+############################# make data 3 into cat.codes#################################
+# (data3.dtypes) # Shows me what type of data this is
+
+data3["buying"] = data3["buying"].astype('category')
+data3["buying"] = data3["buying"].cat.codes
+
+data3["maint"] = data3["maint"].astype('category')
+data3["maint"] = data3["maint"].cat.codes
+
+data3["doors"] = data3["doors"].astype('category')
+data3["doors"] = data3["doors"].cat.codes
+
+data3["persons"] = data3["persons"].astype('category')
+data3["persons"] = data3["persons"].cat.codes
+
+
+data3["lug_boot"] = data3["lug_boot"].astype('category')
+data3["lug_boot"] = data3["lug_boot"].cat.codes
+
+data3["safety"] = data3["safety"].astype('category')
+data3["safety"] = data3["safety"].cat.codes
+
+data3["ClassValues"] = data3["ClassValues"].astype('category')
+data3["ClassValues"] = data3["ClassValues"].cat.codes
+
+#print(data3)
+
+################### Part 3 Type of cars #############################################
+
+features = data3[["buying","maint","doors","persons","lug_boot","safety"]]
+
+#This is the row we want to predict, the targets
+targets = data3["ClassValues"]
+
+dummy_y = np_utils.to_categorical(targets)
+targets = dummy_y
+
+# Quad 1    Quad 3      Quad 2          Quad 4
+train_data, test_data, train_targets, test_targets = train_test_split(features, targets, test_size=.3)
+print(train_data)
+print(targets)
+min_max_scaler = preprocessing.MinMaxScaler() # Allows normalization/scaling to happen for the data
+
+
+
+# train_data = train_data.to_numpy() # Here we converted our data to a dataframe
+train_data = min_max_scaler.fit_transform(train_data) # Normalizes/Scales the train_data
+
+# train_targets = train_targets.to_numpy()
+
+# test_data = test_data.to_numpy()
+test_data = min_max_scaler.transform(test_data)
+
+
+
+######################### Neural Network #############################################################
+
+# Already imported tf.keras.layers so we can just put "Sequential" and "Dense"
+classifier = Sequential()
+classifier.add(Dense(100,activation="relu"))
+classifier.add(Dense(80,activation="relu"))
+classifier.add(Dense(60,activation="relu"))
+classifier.add(Dense(50,activation="relu"))
+classifier.add(Dense(4,activation="softmax")) # 3 different nodes where it corresponds to each class
+classifier.compile(optimizer='Adam',loss=tf.keras.losses.categorical_crossentropy, metrics=["accuracy"])
+# list of optimizers: SGD
+# https://keras.io/api/optimizers/
+# RMSprop
+# Adam
+# Adadelta
+# Adagrad
+# Adamax
+# Nadam
+# Ftrl
+
+# list of Loss
+# https://keras.io/api/losses/
+
+classifier.fit(train_data,train_targets,epochs=100)
+
+prediction = classifier.evaluate(test_data,test_targets)
+print("Accuracy: %.2f%%" % (prediction[1]*100))
+
+# #Gives it a range of acceptable numbers with explained variance score.
+
+
+############################ Need prediction for Neural Netwrok####################
+# need to read optimizers and loss
+# mess around with the parameters
+# set up predition for Neural Network
+# mess around with the number of epochs
+# we also didn't normalize our data, so we may need to do it
+
+
+
+######################### KNN #############################################################
+
+# print("The accuracy of SKLEARN library classifier:")
+# classifier = KNeighborsClassifier(n_neighbors=7)
+# classifier.fit(train_data, train_targets)
+# predictions = classifier.predict(test_data)
+# print(accuracy_score(predictions,test_targets))
+# print("________________________________________________")
+
+
+
