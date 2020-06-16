@@ -1,0 +1,85 @@
+import tensorflow as tf
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from keras.wrappers.scikit_learn import KerasClassifier
+from keras.wrappers.scikit_learn import KerasRegressor
+from sklearn.pipeline import Pipeline
+from sklearn import preprocessing
+from tensorflow import keras
+from tensorflow.keras import layers
+from keras.utils import np_utils
+import pandas as pd
+from numpy import nan
+import os
+from sklearn.neighbors import KNeighborsClassifier
+import numpy as np
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
+from sklearn.metrics import accuracy_score
+from sklearn.naive_bayes import GaussianNB
+import random
+import math
+#from scipy import stats
+from sklearn.metrics import accuracy_score
+# from sklearn.neighbors import KNeighborsRegressor
+# from sklearn.metrics import explained_variance_score
+# from sklearn import preprocessing
+# from numpy import nan
+# from sklearn import tree
+# from sklearn import preprocessing
+# from sklearn import utils
+from sklearn import tree
+
+#################################### data2 reading of data files#################################################
+
+# This part is for part 2  We needed a regular experssion to make the headers line up. We need 2 white space r'\s+'
+names =["mpg","cylinders","displacement","horsepower","weight","acceleration","model","origin","car name"]
+data2 = pd.read_csv("auto-mpg.data", header=None, sep =r'\s+', skipinitialspace=True,
+                    names=names, na_values=["?"])
+# This helps us see how many columns we want to see
+pd.set_option('max_columns', 9)
+pd.set_option('max_rows', 392)
+
+############################### make data 2 into cat.codes############################################################
+
+data2["car name"] = data2["car name"].astype('category')
+data2["car name"] = data2["car name"].cat.codes
+
+#print(data2)
+
+# define base model
+def create_model():
+	# create model
+	classifier = Sequential()
+	classifier.add(Dense(13, input_dim=8, kernel_initializer='normal', activation='relu'))
+	classifier.add(Dense(6, kernel_initializer='normal', activation='relu'))
+	classifier.add(Dense(1, kernel_initializer='normal'))
+	# Compile model
+	classifier.compile(loss='mean_squared_error', optimizer='adam')
+	return classifier
+
+################### Part 2 MGP Drops Missing Data #############################################
+
+data2 = data2.replace('?', nan)
+data2.dropna(inplace=True)
+
+
+
+
+# These are the other rows
+features = data2[["cylinders", "displacement", "horsepower", "weight", "acceleration", "model", "origin", "car name"]]
+features = np.asarray(features)
+#This is the row we want to predict, the targets
+targets = data2["mpg"]
+targets = np.asarray(targets)
+
+
+estimators = []
+estimators.append(('standardize', StandardScaler()))
+estimators.append(('mlp', KerasRegressor(build_fn=create_model, epochs=50, batch_size=5, verbose=0)))
+pipeline = Pipeline(estimators)
+kfold = KFold(n_splits=10)
+
+#                                   used '.values' because it doesn't like pandas
+results = cross_val_score(pipeline, features, targets, cv=kfold)
+print("Accuracy: %.2f (%.2f) MSE" % (results.mean(), results.std()))
